@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, SkipForward, Loader2, Sparkles, Circle, User, Clock } from 'lucide-react'
 import type { PathStep, PathStepStatus } from '@/data/types'
 import { cn } from '@/lib/utils'
@@ -14,16 +14,38 @@ const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTAxNzMyIiwianRp
 const OneBrain_Init = '/api/conversation/a8fa9b3a-ab3a-417a-9537-965d99f752d3'
 const OneBrain_API = '/api/conversation/a8fa9b3a-ab3a-417a-9537-965d99f752d3/'
 
-/** Reveals `text` one character at a time. Restarts whenever `text` changes. */
-function Typewriter({ text, speed = 28 }: { text: string; speed?: number }) {
+/** Renders nothing; just fires `onMount` once after mount. Used to advance the
+ *  pipeline for steps that have no detail text to type out. */
+function NoDetailAdvance({ onMount }: { onMount: () => void }) {
+  const firedRef = useRef(false)
+  useEffect(() => {
+    if (firedRef.current) return
+    firedRef.current = true
+    onMount()
+    // onMount is intentionally not in deps — we only want to fire once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return null
+}
+
+/** Reveals `text` one character at a time. Restarts whenever `text` changes.
+ *  Fires `onDone` exactly once per `text` value, when the full string has been shown. */
+function Typewriter({ text, speed = 5, onDone }: { text: string; speed?: number; onDone?: () => void }) {
   const [shown, setShown] = useState('')
+  // Latest-callback ref so identity changes to `onDone` don't restart typing.
+  const onDoneRef = useRef(onDone)
+  useEffect(() => { onDoneRef.current = onDone }, [onDone])
   useEffect(() => {
     setShown('')
+    if (!text) return
     let i = 0
     const id = window.setInterval(() => {
       i++
       setShown(text.slice(0, i))
-      if (i >= text.length) window.clearInterval(id)
+      if (i >= text.length) {
+        window.clearInterval(id)
+        onDoneRef.current?.()
+      }
     }, speed)
     return () => window.clearInterval(id)
   }, [text, speed])
@@ -61,108 +83,92 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
   // has finished calculating. Before then, every step renders as 'pending'.
   const stepsKey = steps.map((s) => s.id).join('|')
   const [loadedCount, setLoadedCount] = useState(0)
+  // How many steps' Typewriter animations have finished. Used to gate the next
+  // API call so it only fires after the previous step's text has fully rendered.
+  const [typedCount, setTypedCount] = useState(0)
+  // Per-step detail overrides keyed by step id, populated from API responses.
+  // Avoids mutating the `steps` prop directly.
+  const [detailOverrides, setDetailOverrides] = useState<Record<string, string>>({})
+  // Always-fresh ref to `steps` so the fetch effect can read the latest array
+  // without having `steps` in its dependency list (which would re-fire on every
+  // parent render that hands us a new array reference).
+  const stepsRef = useRef(steps)
+  useEffect(() => { stepsRef.current = steps }, [steps])
+  // Tracks which `loadedCount` slots have already had a fetch started for them.
+  // Survives StrictMode's mount → unmount → mount cycle, so the same slot is
+  // never fetched twice. Cleared by the reset effect when the work order changes.
+  const startedRef = useRef<Set<number>>(new Set())
+
+  // Conversation id is obtained on the first step by hitting OneBrain_Init, then
+  // reused for every subsequent message call.
+  const convIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     setLoadedCount(0)
+    setTypedCount(0)
+    setDetailOverrides({})
+    startedRef.current = new Set()
+    convIdRef.current = null
   }, [stepsKey, scoringComplete])
 
+  const authHeaders = {
+    'Authorization': `Bearer ${TOKEN}`,
+    'Content-Type': 'application/json',
+  }
+
   useEffect(() => {
-    let convId : string = '';
     if (!scoringComplete) return
-    if (loadedCount >= steps.length) return
-    if (loadedCount === 0) {
-      fetch(OneBrain_Init, { 
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      })
-      .then((res) => res.json().then((data) => {
-          convId = data.id
-        }))
-        .then(() => {
-          fetch(OneBrain_API + convId, { 
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${TOKEN}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({     
-              "is_streaming_msg": true,
-              "text": "Create a work order with water heater issue.",
-              "states": [] 
-            })
-          }).then((res) => {
-            res.json()
-            .then((data) => {
-              console.log('data', data)
-              steps[loadedCount].detail = data.text
-              setLoadedCount((n) => n + 1);
-            })
+    const currentSteps = stepsRef.current
+    if (loadedCount >= currentSteps.length) return
+    // Gate: only fire the next call once the previous step's typewriter has
+    // finished. For slot N, that means typedCount must be >= N.
+    if (typedCount < loadedCount) return
+    // One fetch per slot, ever — protects against StrictMode double-invoke and
+    // any incidental re-runs from parent re-renders.
+    if (startedRef.current.has(loadedCount)) return
+    startedRef.current.add(loadedCount)
+
+    const isFirst = loadedCount === 0
+    const stepId = currentSteps[loadedCount].id
+    const body = isFirst
+      ? { is_streaming_msg: true, text: 'Create a work order with water heater issue.', states: [] }
+      : { is_streaming_msg: true, text: 'Proceed' }
+
+    // Step 0 must first call the init endpoint to obtain a fresh convId, then
+    // send the message. Later steps reuse the convId stored in convIdRef.
+    const ensureConvId = (): Promise<string> => {
+      if (convIdRef.current) return Promise.resolve(convIdRef.current)
+      return fetch(OneBrain_Init, { method: 'POST', headers: authHeaders, body: JSON.stringify({}) })
+        .then((res) => res.json())
+        .then((initData) => {
+          const cid: string | undefined =
+            initData?.id ?? initData?.conversation_id ?? initData?.convId ?? initData?.data?.id
+          if (!cid) throw new Error('OneBrain init response missing convId: ' + JSON.stringify(initData))
+          convIdRef.current = cid
+          return cid
         })
-        .catch((err) => {
-          console.error(err)
-        })
-      })
-    } else {
-      let cancelled = false
-      setTimeout(() => {
-        console.log('loadedCount', loadedCount)    
-        fetch(OneBrain_API + convId, { 
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({     
-            "is_streaming_msg": true,
-            "text": "Proceed",
-            "states": [
-                {
-                    "key": "database_type",
-                    "value": "mysql"
-                },
-                {
-                    "key": "data_source_name",
-                    "value": "gsmp"
-                },
-                {
-                    "key": "entity_data_providers",
-                    "value": "fuzzy-sharp-membase, fuzzy-sharp-csv"
-                },
-                {
-                    "key": "entity_graph_id",
-                    "value": "691b8ccdb7054ef1b8c193fe"
-                },
-                {
-                    "key": "membase_access_token",
-                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI2OTI1ZWJkNGNmMzE3ZDc1NDY1NDgxZTciLCJ1bmlxdWVfbmFtZSI6Im9uZWJyYWluLWRldiIsImF1dGhtZXRob2QiOiJwcm9qZWN0X2tleSIsImF1dGhfcHJvdmlkZXIiOiJtZW1iYXNlIiwib3JnX2lkIjoiNjg1MDMwNDdjNTc5NmE4MDQ5NjM0YTRmIiwicHJval9pZCI6IjY4NTAzMDQ3YzU3OTZhODA0OTYzNGE1MSIsIm5iZiI6MTc2NDA5Mjg4NCwiZXhwIjoxNzk1NjI4ODg0LCJpYXQiOjE3NjQwOTI4ODQsImlzcyI6Im1lbWJhc2UiLCJhdWQiOiJtZW1iYXNlIn0.xcrQs0AUM03PfFyQU3vz7BuMREes76Xbb6iO_DWJhUk"
-                }
-            ],
-            "postback": {
-                "payload": "Please tell me the total number of WCPVI reactive work order of IH?"
-            }
-          })
-        })
-        .then((res) => {
-          res.json()
-          .then(() => {
-            console.log('loadedCount', loadedCount)
-            if (!cancelled) setLoadedCount((n) => n + 1)
-          })
-        })
-        .catch((err) => {
-          console.error(err)
-          if (!cancelled) setLoadedCount((n) => n + 1)
-        })
-      }, 5000);
-      return () => {
-        cancelled = true
-      }
     }
-  }, [loadedCount, steps.length, scoringComplete])
+
+    ensureConvId()
+      .then((cid) =>
+        fetch(OneBrain_API + cid, {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify(body),
+        }),
+      )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.text === 'string') {
+          setDetailOverrides((prev) => ({ ...prev, [stepId]: data.text }))
+        }
+        setLoadedCount((n) => n + 1)
+      })
+      .catch((err) => {
+        console.error(err)
+        setLoadedCount((n) => n + 1)
+      })
+  }, [loadedCount, typedCount, stepsKey, scoringComplete])
 
   return (
     <ol className="relative flex flex-col gap-3 px-1 pt-2 pb-1">
@@ -217,11 +223,21 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
                   {meta.label}
                 </span>
               </div>
-              {step.detail && displayStatus === 'done-auto' && (
-                <div className={cn('mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed', meta.detailText)}>
-                  <Typewriter text={step.detail} />
-                </div>
-              )}
+              {(() => {
+                const detail = detailOverrides[step.id] ?? step.detail
+                if (displayStatus !== 'done-auto') return null
+                // Step is "typed" once its Typewriter finishes; for steps with no
+                // detail text, advance immediately so the next API call isn't stalled.
+                const markTyped = () => setTypedCount((n) => Math.max(n, i + 1))
+                if (!detail) {
+                  return <NoDetailAdvance onMount={markTyped} />
+                }
+                return (
+                  <div className={cn('mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed', meta.detailText)}>
+                    <Typewriter text={detail} onDone={markTyped} />
+                  </div>
+                )
+              })()}
             </div>
           </li>
         )
