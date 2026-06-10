@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WO Orchestrator · AI Triage (Preview)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#6366f1', 300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
+          },
+          keyframes: {
+            'fade-in-up': { '0%': { opacity: '0', transform: 'translateY(8px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            'pulse-soft': { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.6' } },
+          },
+          animation: {
+            'fade-in-up': 'fade-in-up 400ms ease-out both',
+            'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://rsms.me/" />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased">
+
+  <!-- ============ HEADER ============ -->
+  <header class="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
+      <button class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+      </button>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+          <span class="font-mono text-xs text-slate-500">WO-10472</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-red-500/15 text-red-300 ring-red-500/30">
+            <i data-lucide="alert-octagon" class="h-3 w-3"></i> Urgent · P1
+          </span>
+          <span class="inline-flex items-center gap-1 text-xs text-slate-500">
+            <i data-lucide="clock" class="h-3 w-3"></i> Created 12 min ago
+          </span>
+        </div>
+        <h1 class="mt-1 truncate text-xl font-semibold text-slate-100">Active water leak under kitchen sink</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl space-y-5 px-6 py-6">
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-5">
+
+      <!-- ============ LEFT: WO DETAILS ============ -->
+      <div class="space-y-5 lg:col-span-3 animate-fade-in-up">
+        <section class="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
+          <div class="px-5 pt-5 pb-3">
+            <h3 class="text-sm font-semibold tracking-wide text-slate-200 uppercase">Work order details</h3>
+          </div>
+          <div class="px-5 pb-5 space-y-5">
+            <p class="text-sm leading-relaxed text-slate-300">
+              Tenant reports continuous dripping from supply line under the kitchen sink. Cabinet floor is wet,
+              small pool forming. No shut-off attempted. Tenant home until 6pm.
+            </p>
+
+            <!-- Photo gallery -->
+            <div class="space-y-3">
+              <div class="relative h-64 overflow-hidden rounded-xl bg-gradient-to-br from-sky-700 via-slate-700 to-slate-900 ring-1 ring-slate-800">
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <i data-lucide="droplets" class="h-24 w-24 text-white/30" stroke-width="1.25"></i>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                  <p class="text-xs font-medium text-white/90">Wet cabinet floor</p>
+                </div>
+                <div class="absolute top-3 right-3 rounded-md bg-black/40 px-2 py-1 text-[10px] font-medium text-white/80 backdrop-blur">1 / 3</div>
+              </div>
+              <div class="flex gap-2">
+                <button class="relative h-16 w-20 overflow-hidden rounded-lg bg-gradient-to-br from-sky-700 via-slate-700 to-slate-900 ring-2 ring-brand-400">
+                  <div class="absolute inset-0 flex items-center justify-center"><i data-lucide="droplets" class="h-6 w-6 text-white/50" stroke-width="1.5"></i></div>
+                </button>
+                <button class="relative h-16 w-20 overflow-hidden rounded-lg bg-gradient-to-br from-slate-600 via-slate-800 to-slate-950 ring-1 ring-slate-800 hover:ring-slate-600">
+                  <div class="absolute inset-0 flex items-center justify-center"><i data-lucide="wrench" class="h-6 w-6 text-white/50" stroke-width="1.5"></i></div>
+                </button>
+                <button class="relative h-16 w-20 overflow-hidden rounded-lg bg-gradient-to-br from-cyan-700 via-slate-700 to-slate-900 ring-1 ring-slate-800 hover:ring-slate-600">
+                  <div class="absolute inset-0 flex items-center justify-center"><i data-lucide="droplets" class="h-6 w-6 text-white/50" stroke-width="1.5"></i></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Info grid -->
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                <div class="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="wrench" class="h-4 w-4"></i></div>
+                <div class="min-w-0">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Asset</div>
+                  <div class="truncate text-sm font-medium text-slate-200">Kitchen plumbing — Unit 12B</div>
+                  <div class="truncate text-xs text-slate-400">Plumbing · Supply line</div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                <div class="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="map-pin" class="h-4 w-4"></i></div>
+                <div class="min-w-0">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Location</div>
+                  <div class="truncate text-sm font-medium text-slate-200">Building A · Floor 12 · Unit 12B</div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                <div class="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="user" class="h-4 w-4"></i></div>
+                <div class="min-w-0">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Reporter</div>
+                  <div class="truncate text-sm font-medium text-slate-200">Priya Shah</div>
+                  <div class="truncate text-xs text-slate-400">Unit 12B · +1 (415) 555-0142</div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                <div class="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="calendar" class="h-4 w-4"></i></div>
+                <div class="min-w-0">
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Asset history</div>
+                  <div class="truncate text-sm font-medium text-slate-200">Installed 2018</div>
+                  <div class="truncate text-xs text-slate-400">Last serviced 2024-11-03</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ RIGHT: AI SUGGESTION PANEL ============ -->
+      <div class="lg:col-span-2 animate-fade-in-up" style="animation-delay: 120ms;">
+        <section class="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur ring-1 ring-brand-500/20 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]">
+          <div class="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-brand-500/10 blur-3xl"></div>
+
+          <div class="relative px-5 pt-5 pb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40">
+                <i data-lucide="sparkles" class="h-4 w-4 text-brand-400"></i>
+              </div>
+              <h3 class="text-sm font-semibold tracking-wide text-brand-300 uppercase">AI Triage</h3>
+            </div>
+            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-emerald-500/15 text-emerald-300 ring-emerald-500/30">
+              <i data-lucide="check-circle-2" class="h-3 w-3"></i> Ready to auto-route
+            </span>
+          </div>
+
+          <div class="relative px-5 pb-5 space-y-5">
+
+            <!-- Overall confidence + rationale -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div class="mb-3 flex items-baseline justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Overall confidence</span>
+                <span class="text-2xl font-bold tabular-nums text-slate-100">92%</span>
+              </div>
+              <div class="h-1.5 overflow-hidden rounded-full bg-slate-800">
+                <div class="h-full rounded-full bg-emerald-500 transition-all duration-500" style="width: 92%"></div>
+              </div>
+              <ul class="mt-4 space-y-2">
+                <li class="flex items-start gap-2 text-xs leading-relaxed text-slate-400"><span class="mt-1.5 h-1 w-1 flex-none rounded-full bg-brand-400"></span><span>Photo classifier matched "supply-line leak, compression joint" with 94% confidence.</span></li>
+                <li class="flex items-start gap-2 text-xs leading-relaxed text-slate-400"><span class="mt-1.5 h-1 w-1 flex-none rounded-full bg-brand-400"></span><span>15 historical WOs on similar 2018-spec Moen supply lines resolved with the same 3 line items.</span></li>
+                <li class="flex items-start gap-2 text-xs leading-relaxed text-slate-400"><span class="mt-1.5 h-1 w-1 flex-none rounded-full bg-brand-400"></span><span>Estimated total cost ~$260 is well under the $500 auto-approval threshold for urgent plumbing.</span></li>
+                <li class="flex items-start gap-2 text-xs leading-relaxed text-slate-400"><span class="mt-1.5 h-1 w-1 flex-none rounded-full bg-brand-400"></span><span>Preferred vendor AquaFix is on-call within 2.1 km, ETA 38 min.</span></li>
+              </ul>
+            </div>
+
+            <!-- Predicted proposal (Incurred Costs + Proposal Description) -->
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <div class="flex items-baseline gap-2">
+                  <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Predicted proposal</h4>
+                  <span class="text-[10px] text-brand-300/80" data-mode-label>AI suggested · vendor confirms Qty</span>
+                </div>
+                <button id="toggle-mode-btn" data-mode="ai"
+                  class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 ring-1 ring-slate-700">
+                  <i data-lucide="user" class="h-3.5 w-3.5"></i> Preview vendor view
+                </button>
+              </div>
+
+              <!-- Description of services (AI-drafted) -->
+              <div class="mb-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                <div class="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Description of services</div>
+                <p class="text-xs leading-relaxed text-slate-300">
+                  Replace failed 3/8" braided supply line at the hot-side compression joint and adjacent
+                  angle stop shut-off valve. Standard kitchen plumbing repair, no demolition required.
+                  Estimated 1.5 hr on-site.
+                </p>
+              </div>
+
+              <div class="overflow-hidden rounded-xl border border-slate-800">
+                <table class="w-full text-left">
+                  <thead class="bg-slate-900/80 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th class="px-3 py-2 w-20">Qty</th>
+                      <th class="px-3 py-2">Description</th>
+                      <th class="px-3 py-2 text-right w-24">Unit Price</th>
+                      <th class="px-3 py-2 text-right w-24">Net Price</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800 bg-slate-900/40">
+
+                    <tr><td colspan="4" class="bg-slate-900/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Incurred Costs · Investigate / diagnose</td></tr>
+
+                    <tr class="proposal-row text-sm" data-section="incurred" data-unit-price="85">
+                      <td class="px-3 py-3"><input class="qty-input w-14 rounded-md border px-1.5 py-1 text-right tabular-nums text-sm" data-ai-qty="1" placeholder="—" /></td>
+                      <td class="px-3 py-3">
+                        <div class="text-slate-200">Labor</div>
+                        <div class="text-[11px] text-slate-500">Investigate / diagnose with no repairs</div>
+                      </td>
+                      <td class="px-3 py-3 text-right tabular-nums text-slate-300">$85.00</td>
+                      <td class="px-3 py-3 text-right tabular-nums font-medium text-slate-200"><span class="net-price">—</span></td>
+                    </tr>
+                    <tr class="proposal-row text-sm" data-section="incurred" data-unit-price="0">
+                      <td class="px-3 py-3"><input class="qty-input w-14 rounded-md border px-1.5 py-1 text-right tabular-nums text-sm" data-ai-qty="1" placeholder="—" /></td>
+                      <td class="px-3 py-3"><div class="text-slate-200">Part</div></td>
+                      <td class="px-3 py-3 text-right tabular-nums text-slate-300">$0.00</td>
+                      <td class="px-3 py-3 text-right tabular-nums font-medium text-slate-200"><span class="net-price">—</span></td>
+                    </tr>
+                    <tr class="text-sm bg-slate-900/70">
+                      <td colspan="3" class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sub-Total</td>
+                      <td class="px-3 py-2 text-right tabular-nums font-semibold text-slate-100" data-subtotal="incurred">—</td>
+                    </tr>
+
+                    <tr><td colspan="4" class="bg-brand-500/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-brand-300">Proposal Description · Repair</td></tr>
+
+                    <tr class="proposal-row text-sm" data-section="proposal" data-unit-price="95">
+                      <td class="px-3 py-3"><input class="qty-input w-14 rounded-md border px-1.5 py-1 text-right tabular-nums text-sm" data-ai-qty="1.5" placeholder="AI: 1.5" /></td>
+                      <td class="px-3 py-3">
+                        <div class="flex items-center gap-2">
+                          <span class="text-slate-200">Labor</span>
+                          <span class="rounded-full bg-emerald-500/15 px-1.5 py-0 text-[9px] font-medium text-emerald-300 ring-1 ring-emerald-500/30">97%</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-mono">LBR-PLM-STD · Standard plumbing labor (hr)</div>
+                      </td>
+                      <td class="px-3 py-3 text-right tabular-nums text-slate-300">$95.00</td>
+                      <td class="px-3 py-3 text-right tabular-nums font-medium text-slate-200"><span class="net-price">—</span></td>
+                    </tr>
+                    <tr class="proposal-row text-sm" data-section="proposal" data-unit-price="18">
+                      <td class="px-3 py-3"><input class="qty-input w-14 rounded-md border px-1.5 py-1 text-right tabular-nums text-sm" data-ai-qty="1" placeholder="AI: 1" /></td>
+                      <td class="px-3 py-3">
+                        <div class="flex items-center gap-2">
+                          <span class="text-slate-200">Part</span>
+                          <span class="rounded-full bg-emerald-500/15 px-1.5 py-0 text-[9px] font-medium text-emerald-300 ring-1 ring-emerald-500/30">95%</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-mono">PLM-SUP-038 · 3/8" braided stainless supply line (ea)</div>
+                      </td>
+                      <td class="px-3 py-3 text-right tabular-nums text-slate-300">$18.00</td>
+                      <td class="px-3 py-3 text-right tabular-nums font-medium text-slate-200"><span class="net-price">—</span></td>
+                    </tr>
+                    <tr class="proposal-row text-sm" data-section="proposal" data-unit-price="14">
+                      <td class="px-3 py-3"><input class="qty-input w-14 rounded-md border px-1.5 py-1 text-right tabular-nums text-sm" data-ai-qty="1" placeholder="AI: 1" /></td>
+                      <td class="px-3 py-3">
+                        <div class="flex items-center gap-2">
+                          <span class="text-slate-200">Part</span>
+                          <span class="rounded-full bg-amber-500/15 px-1.5 py-0 text-[9px] font-medium text-amber-300 ring-1 ring-amber-500/30">88%</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-mono">PLM-VLV-014 · Angle stop shut-off valve, 1/2" x 3/8" (ea)</div>
+                      </td>
+                      <td class="px-3 py-3 text-right tabular-nums text-slate-300">$14.00</td>
+                      <td class="px-3 py-3 text-right tabular-nums font-medium text-slate-200"><span class="net-price">—</span></td>
+                    </tr>
+                    <tr class="text-sm bg-slate-900/70">
+                      <td colspan="3" class="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">Sub-Total</td>
+                      <td class="px-3 py-2 text-right tabular-nums font-semibold text-slate-100" data-subtotal="proposal">—</td>
+                    </tr>
+
+                    <tr class="text-sm bg-brand-500/10">
+                      <td colspan="3" class="px-3 py-2 text-right text-[11px] font-bold uppercase tracking-wider text-brand-300">Grand Total</td>
+                      <td class="px-3 py-2 text-right tabular-nums text-base font-bold text-brand-300" data-grand-total>—</td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <p class="mt-2 text-[10px] text-slate-500">
+                AI suggests <span class="text-slate-400">Qty</span> from similar resolved WOs.
+                Vendor confirms or overrides Qty on dispatch — Net Price &amp; totals recalculate live.
+              </p>
+            </div>
+
+            <!-- Similar WOs -->
+            <div>
+              <div class="mb-2 flex items-baseline justify-between">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Similar historical work orders</h4>
+                <span class="text-[10px] text-slate-500">3 matched</span>
+              </div>
+              <ul class="space-y-2">
+                <li class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3 transition-colors hover:border-slate-700">
+                  <div class="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2"><span class="font-mono text-[11px] text-slate-500">WO-09812</span><span class="text-sm text-slate-200 truncate">Kitchen supply line drip, Unit 8A</span></div>
+                    <div class="mt-0.5 flex items-center gap-3 text-[11px] text-slate-500"><span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3 w-3"></i> 2.1 hrs</span><span>Same 3 line items · $176</span></div>
+                  </div>
+                  <div class="flex-none text-right"><div class="text-[10px] uppercase text-slate-500">match</div><div class="text-sm font-semibold tabular-nums text-brand-300">94%</div></div>
+                </li>
+                <li class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3 transition-colors hover:border-slate-700">
+                  <div class="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2"><span class="font-mono text-[11px] text-slate-500">WO-09245</span><span class="text-sm text-slate-200 truncate">Under-sink leak, Building A 14F</span></div>
+                    <div class="mt-0.5 flex items-center gap-3 text-[11px] text-slate-500"><span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3 w-3"></i> 1.8 hrs</span><span>Replaced supply + angle stop · $188</span></div>
+                  </div>
+                  <div class="flex-none text-right"><div class="text-[10px] uppercase text-slate-500">match</div><div class="text-sm font-semibold tabular-nums text-brand-300">89%</div></div>
+                </li>
+                <li class="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3 transition-colors hover:border-slate-700">
+                  <div class="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-slate-800 text-slate-400"><i data-lucide="file-text" class="h-4 w-4"></i></div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2"><span class="font-mono text-[11px] text-slate-500">WO-08901</span><span class="text-sm text-slate-200 truncate">Slow drip kitchen, Unit 6C</span></div>
+                    <div class="mt-0.5 flex items-center gap-3 text-[11px] text-slate-500"><span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3 w-3"></i> 2.4 hrs</span><span>Replaced supply line only · $145</span></div>
+                  </div>
+                  <div class="flex-none text-right"><div class="text-[10px] uppercase text-slate-500">match</div><div class="text-sm font-semibold tabular-nums text-brand-300">83%</div></div>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Recommended vendor -->
+            <div>
+              <div class="mb-2 flex items-baseline justify-between">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Recommended vendor</h4>
+              </div>
+              <div class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/30 to-brand-700/30 ring-1 ring-brand-400/30">
+                  <span class="text-sm font-bold text-brand-300">AP</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-slate-100">AquaFix Plumbing</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-emerald-500/15 text-emerald-300 ring-emerald-500/30">On-call</span>
+                  </div>
+                  <div class="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                    <span class="inline-flex items-center gap-1"><i data-lucide="star" class="h-3 w-3 fill-amber-400 text-amber-400"></i> 4.8</span>
+                    <span class="inline-flex items-center gap-1"><i data-lucide="navigation" class="h-3 w-3"></i> 2.1 km</span>
+                    <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="h-3 w-3"></i> ETA 38 min</span>
+                  </div>
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    <span class="rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">Plumbing</span>
+                    <span class="rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">Emergency leaks</span>
+                    <span class="rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">24/7</span>
+                  </div>
+                </div>
+                <button class="flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200">
+                  <i data-lucide="phone" class="h-4 w-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cost + Approve button -->
+            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div class="mb-3 grid grid-cols-2 gap-3">
+                <div>
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Estimated cost</div>
+                  <div class="text-lg font-semibold text-slate-100" data-estimated-cost>—</div>
+                </div>
+                <div>
+                  <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Estimated time</div>
+                  <div class="text-lg font-semibold text-slate-100">2.0 hrs</div>
+                </div>
+              </div>
+              <button class="w-full inline-flex items-center justify-center gap-2 rounded-xl font-semibold h-12 px-6 text-sm bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/20 ring-1 ring-brand-400/30 transition-all active:scale-[0.98]">
+                Approve &amp; Auto-dispatch <i data-lucide="arrow-right" class="h-4 w-4"></i>
+              </button>
+              <p class="mt-2 text-center text-[11px] text-slate-500">You can override line items before dispatch · Audit trail recorded</p>
+            </div>
+
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+    <!-- ============ BOTTOM: GOLDEN PATH STEPPER ============ -->
+    <section class="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur animate-fade-in-up shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]" style="animation-delay: 240ms;">
+      <div class="px-5 pt-5 pb-3 flex items-center justify-between">
+        <h3 class="text-sm font-semibold tracking-wide text-slate-200 uppercase">Golden path</h3>
+        <div class="flex items-center gap-4 text-xs">
+          <span class="text-slate-400"><span class="font-semibold text-emerald-300">3</span> / 8 handled by AI</span>
+          <span class="text-slate-400">~<span class="font-semibold text-brand-300">78 min</span> saved</span>
+        </div>
+      </div>
+      <div class="px-5 pb-5">
+        <ol class="relative flex items-start justify-between gap-2 overflow-x-auto pb-1 scrollbar-thin">
+
+          <!-- Step 1: done-auto -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-gradient-to-r from-brand-500/60 to-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-emerald-500/50 bg-emerald-500/20 text-emerald-300">
+              <i data-lucide="sparkles" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Intake &amp; triage</div>
+              <div class="mt-0.5 text-[10px] font-medium text-emerald-300">AI auto</div>
+              <div class="mt-1 text-[10px] leading-tight text-slate-500">NLP categorized as Plumbing · Leak · P1</div>
+            </div>
+          </li>
+
+          <!-- Step 2: done-auto -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-gradient-to-r from-brand-500/60 to-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-emerald-500/50 bg-emerald-500/20 text-emerald-300">
+              <i data-lucide="sparkles" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Diagnose &amp; price</div>
+              <div class="mt-0.5 text-[10px] font-medium text-emerald-300">AI auto</div>
+              <div class="mt-1 text-[10px] leading-tight text-slate-500">Predicted 3 line items · $182</div>
+            </div>
+          </li>
+
+          <!-- Step 3: skipped -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-gradient-to-r from-brand-500/60 to-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-brand-500/50 bg-brand-500/20 text-brand-300">
+              <i data-lucide="skip-forward" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Approval</div>
+              <div class="mt-0.5 text-[10px] font-medium text-brand-300">Skipped</div>
+              <div class="mt-1 text-[10px] leading-tight text-slate-500">Under $500 auto-approve threshold</div>
+            </div>
+          </li>
+
+          <!-- Step 4: in-progress -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-gradient-to-r from-brand-500/60 to-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-amber-500/60 bg-amber-500/20 text-amber-300 animate-pulse-soft">
+              <i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Vendor dispatch</div>
+              <div class="mt-0.5 text-[10px] font-medium text-amber-300">In progress</div>
+              <div class="mt-1 text-[10px] leading-tight text-slate-500">Awaiting your confirmation</div>
+            </div>
+          </li>
+
+          <!-- Step 5: pending -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-slate-700 bg-slate-800 text-slate-500">
+              <i data-lucide="circle" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Material check</div>
+              <div class="mt-0.5 text-[10px] font-medium text-slate-500">Pending</div>
+              <div class="mt-1 text-[10px] leading-tight text-slate-500">AquaFix van inventory: all parts in stock</div>
+            </div>
+          </li>
+
+          <!-- Step 6: pending -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-slate-700 bg-slate-800 text-slate-500">
+              <i data-lucide="circle" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Tenant notification</div>
+              <div class="mt-0.5 text-[10px] font-medium text-slate-500">Pending</div>
+              <div class="mt-1 text-[10px] leading-tight text-slate-500">SMS + email queued for dispatch</div>
+            </div>
+          </li>
+
+          <!-- Step 7: pending -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="absolute left-1/2 top-5 h-px w-full bg-slate-800"></div>
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-slate-700 bg-slate-800 text-slate-500">
+              <i data-lucide="circle" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">On-site completion</div>
+              <div class="mt-0.5 text-[10px] font-medium text-slate-500">Pending</div>
+            </div>
+          </li>
+
+          <!-- Step 8: pending (no connector after last) -->
+          <li class="relative flex min-w-[110px] flex-1 flex-col items-center text-center">
+            <div class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-900 ring-slate-700 bg-slate-800 text-slate-500">
+              <i data-lucide="circle" class="h-4 w-4"></i>
+            </div>
+            <div class="mt-2 px-1">
+              <div class="text-[11px] font-medium text-slate-200 leading-tight">Close-out &amp; follow-up</div>
+              <div class="mt-0.5 text-[10px] font-medium text-slate-500">Pending</div>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ----- Proposal live calculation -----
+    const fmtMoney = (n) => '$' + n.toFixed(2);
+
+    function recalc() {
+      let incurred = 0;
+      let proposal = 0;
+      let anyQty = false;
+      document.querySelectorAll('.proposal-row').forEach((row) => {
+        const input = row.querySelector('.qty-input');
+        const raw = (input.value || '').trim();
+        const qty = parseFloat(raw);
+        const unit = parseFloat(row.dataset.unitPrice);
+        const netEl = row.querySelector('.net-price');
+        if (!isNaN(qty)) {
+          anyQty = true;
+          const net = qty * unit;
+          netEl.textContent = fmtMoney(net);
+          netEl.classList.remove('text-slate-500');
+          netEl.classList.add('text-slate-100');
+          if (row.dataset.section === 'incurred') incurred += net;
+          else proposal += net;
+        } else {
+          netEl.textContent = '—';
+          netEl.classList.add('text-slate-500');
+          netEl.classList.remove('text-slate-100');
+        }
+      });
+      const setText = (sel, txt) => {
+        const el = document.querySelector(sel);
+        if (el) el.textContent = txt;
+      };
+      setText('[data-subtotal="incurred"]', anyQty ? fmtMoney(incurred) : '—');
+      setText('[data-subtotal="proposal"]', anyQty ? fmtMoney(proposal) : '—');
+      setText('[data-grand-total]',        anyQty ? fmtMoney(incurred + proposal) : '—');
+      setText('[data-estimated-cost]',     anyQty ? fmtMoney(incurred + proposal) : '—');
+    }
+
+    function setMode(mode) {
+      const aiInputCls   = ['bg-slate-900/40','border-slate-800','text-emerald-300','italic'];
+      const vendInputCls = ['bg-slate-950/80','border-brand-500/50','text-slate-100','focus:ring-2','focus:ring-brand-500/40','focus:outline-none'];
+      document.querySelectorAll('.qty-input').forEach((input) => {
+        aiInputCls.forEach((c) => input.classList.remove(c));
+        vendInputCls.forEach((c) => input.classList.remove(c));
+        if (mode === 'vendor') {
+          input.value = '';
+          input.readOnly = false;
+          vendInputCls.forEach((c) => input.classList.add(c));
+        } else {
+          input.value = input.dataset.aiQty || '';
+          input.readOnly = true;
+          aiInputCls.forEach((c) => input.classList.add(c));
+        }
+      });
+      const label = document.querySelector('[data-mode-label]');
+      if (label) {
+        label.textContent = mode === 'vendor'
+          ? 'Vendor view · enter actual Qty'
+          : 'AI suggested · vendor confirms Qty';
+      }
+      const btn = document.getElementById('toggle-mode-btn');
+      btn.dataset.mode = mode;
+      btn.innerHTML = mode === 'vendor'
+        ? '<i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Show AI suggestion'
+        : '<i data-lucide="user" class="h-3.5 w-3.5"></i> Preview vendor view';
+      recalc();
+      lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.qty-input').forEach((input) => {
+        input.addEventListener('input', recalc);
+        input.setAttribute('inputmode', 'decimal');
+      });
+      document.getElementById('toggle-mode-btn').addEventListener('click', () => {
+        const cur = document.getElementById('toggle-mode-btn').dataset.mode || 'ai';
+        setMode(cur === 'ai' ? 'vendor' : 'ai');
+      });
+      setMode('ai');
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
