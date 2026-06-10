@@ -10,10 +10,9 @@ interface Props {
   scoringComplete?: boolean
 }
 
-const COFFEE_API = 'https://api.sampleapis.com/coffee/hot'
 const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTAxNzMyIiwianRpIjoiZjJlOGEwOTctNTNhYy00YjRkLTkwZTEtYmMwOGJkNGYzNTg2IiwidWlkIjoiMTEwMTczMiIsInJvbGVfdHlwZV9pZCI6IjEiLCJhZmZpbGlhdGVfaWQiOiIiLCJjbGllbnRfaWQiOiIiLCJsb2NhdGlvbl9pZCI6IiIsIm5hbWUiOiIxMDM5NDIiLCJmdWxsX25hbWUiOiJZYW5hbiBXYW5nIiwiZW1haWwiOiJ5d2FuZ0BzbXNhc3Npc3QuY29tIiwicm9sZV9pZHMiOiIxMDEsMTU5NywzMDYiLCJkZXBhcnRtZW50cyI6IjMiLCJhYl9mZWF0dXJlcyI6IiIsImV4cCI6MTc4MjMyOTA0NiwiaXNzIjoiU01TQVNTSVNULkNPTSIsImF1ZCI6IlNNU0FTU0lTVCJ9.Vw5f-OHb0347D-jFwbJDjcJKoUQopG0WMMrbPIiQGXs'
-const OneBrain_Init = 'https://meshstage.smsassist.com/onebrain/conversation/a8fa9b3a-ab3a-417a-9537-965d99f752d3'
-const OneBrain_API = 'https://meshstage.smsassist.com/onebrain/conversation/a8fa9b3a-ab3a-417a-9537-965d99f752d3/'
+const OneBrain_Init = '/api/conversation/a8fa9b3a-ab3a-417a-9537-965d99f752d3'
+const OneBrain_API = '/api/conversation/a8fa9b3a-ab3a-417a-9537-965d99f752d3/'
 
 /** Reveals `text` one character at a time. Restarts whenever `text` changes. */
 function Typewriter({ text, speed = 28 }: { text: string; speed?: number }) {
@@ -71,29 +70,42 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
     let convId : string = '';
     if (!scoringComplete) return
     if (loadedCount >= steps.length) return
-    else if (loadedCount === 0) {
+    if (loadedCount === 0) {
       fetch(OneBrain_Init, { 
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${TOKEN}`
-        } })
-        .then((res) => res.json())
-        .then((data) => {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      })
+      .then((res) => res.json().then((data) => {
           convId = data.id
-        })
+        }))
         .then(() => {
           fetch(OneBrain_API + convId, { 
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${TOKEN}`
-            } }).then((res) => res.json())
-            .then((data2) => {
-              steps[loadedCount].detail = data2.text
+              'Authorization': `Bearer ${TOKEN}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({     
+              "is_streaming_msg": true,
+              "text": "Create a work order with water heater issue.",
+              "states": [] 
+            })
+          }).then((res) => {
+            res.json()
+            .then((data) => {
+              console.log('data', data)
+              steps[loadedCount].detail = data.text
+              setLoadedCount((n) => n + 1);
             })
         })
         .catch((err) => {
           console.error(err)
         })
+      })
     } else {
       let cancelled = false
       setTimeout(() => {
@@ -101,23 +113,51 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
         fetch(OneBrain_API + convId, { 
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${TOKEN}`
-          } })
+            'Authorization': `Bearer ${TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({     
+            "is_streaming_msg": true,
+            "text": "Proceed",
+            "states": [
+                {
+                    "key": "database_type",
+                    "value": "mysql"
+                },
+                {
+                    "key": "data_source_name",
+                    "value": "gsmp"
+                },
+                {
+                    "key": "entity_data_providers",
+                    "value": "fuzzy-sharp-membase, fuzzy-sharp-csv"
+                },
+                {
+                    "key": "entity_graph_id",
+                    "value": "691b8ccdb7054ef1b8c193fe"
+                },
+                {
+                    "key": "membase_access_token",
+                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI2OTI1ZWJkNGNmMzE3ZDc1NDY1NDgxZTciLCJ1bmlxdWVfbmFtZSI6Im9uZWJyYWluLWRldiIsImF1dGhtZXRob2QiOiJwcm9qZWN0X2tleSIsImF1dGhfcHJvdmlkZXIiOiJtZW1iYXNlIiwib3JnX2lkIjoiNjg1MDMwNDdjNTc5NmE4MDQ5NjM0YTRmIiwicHJval9pZCI6IjY4NTAzMDQ3YzU3OTZhODA0OTYzNGE1MSIsIm5iZiI6MTc2NDA5Mjg4NCwiZXhwIjoxNzk1NjI4ODg0LCJpYXQiOjE3NjQwOTI4ODQsImlzcyI6Im1lbWJhc2UiLCJhdWQiOiJtZW1iYXNlIn0.xcrQs0AUM03PfFyQU3vz7BuMREes76Xbb6iO_DWJhUk"
+                }
+            ],
+            "postback": {
+                "payload": "Please tell me the total number of WCPVI reactive work order of IH?"
+            }
+          })
+        })
           .then((res) => {
-            res.json().then((data2) => {
-              steps[loadedCount].detail = data2.text
+            res.json()
+            .then(() => {
+              console.log('loadedCount', loadedCount)
+              if (!cancelled) setLoadedCount((n) => n + 1)
             })
-          })
-          .then(() => {
-            console.log('loadedCount', loadedCount)
-            if (!cancelled) setLoadedCount((n) => n + 1)
-          })
-          .catch((err) => {
-            console.error(err)
-            if (!cancelled) setLoadedCount((n) => n + 1)
-          })
-      }, 3000);
-      if (!cancelled) setLoadedCount((n) => n + 1)
+        })
+        .catch((err) => {
+          console.error(err)
+          if (!cancelled) setLoadedCount((n) => n + 1)
+        })
+      }, 5000);
       return () => {
         cancelled = true
       }
