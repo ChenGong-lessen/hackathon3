@@ -146,12 +146,12 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
             }
           })
         })
-          .then((res) => {
-            res.json()
-            .then(() => {
-              console.log('loadedCount', loadedCount)
-              if (!cancelled) setLoadedCount((n) => n + 1)
-            })
+        .then((res) => {
+          res.json()
+          .then(() => {
+            console.log('loadedCount', loadedCount)
+            if (!cancelled) setLoadedCount((n) => n + 1)
+          })
         })
         .catch((err) => {
           console.error(err)
