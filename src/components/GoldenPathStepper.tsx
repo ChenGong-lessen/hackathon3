@@ -165,7 +165,7 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
   }, [loadedCount, steps.length, scoringComplete])
 
   return (
-    <ol className="relative flex flex-col px-1 pt-2 pb-1">
+    <ol className="relative flex flex-col gap-3 px-1 pt-2 pb-1">
       {steps.map((step, i) => {
         // Icon + label only render once loadedCount has reached this step.
         // Anything further out stays hidden until its turn comes.
@@ -175,40 +175,51 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
         const displayStatus: PathStepStatus = i < loadedCount ? 'done-auto' : 'in-progress'
         const meta = statusMeta[displayStatus]
         const Icon = meta.icon
-        // The last *visible* step is either the currently-loading one or the final step.
-        const isLast = i === Math.min(loadedCount, steps.length - 1)
         return (
-          <li key={step.id} className="relative flex min-w-0 items-stretch gap-3 text-left">
-            <div className="relative flex flex-none flex-col items-center">
-              <div
-                className={cn(
-                  'relative z-10 flex h-6 w-6 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-slate-50 transition-all duration-500',
-                  meta.ring,
-                  meta.bg,
-                )}
-              >
-                <Icon className={cn('h-3 w-3 transition-colors duration-500', displayStatus === 'in-progress' && 'animate-spin')} />
-              </div>
-              {!isLast && (
-                <div className="w-px flex-1 bg-gradient-to-b from-brand-400 to-slate-200 transition-colors duration-500" />
-              )}
-            </div>
-            <div className={cn('flex min-w-0 flex-1 items-center gap-3 pt-1', !isLast && 'pb-4')}>
-              <div className="min-w-0 flex-none">
-                <div className="text-sm font-semibold text-slate-800 leading-tight">{step.label}</div>
-                <div className={cn('mt-0.5 text-xs font-medium', meta.textTone)}>{meta.label}</div>
+          <li
+            key={step.id}
+            className={cn(
+              'group/card relative animate-fade-in-up overflow-hidden rounded-2xl bg-white shadow-sm ring-1 transition-all duration-300 hover:-translate-y-px hover:shadow-md',
+              meta.detailRing,
+            )}
+          >
+            {/* Soft tinted wash that picks up the status color */}
+            <span className={cn('pointer-events-none absolute inset-0 opacity-70', meta.detailBg)} />
+            {/* Left accent stripe */}
+            <span className={cn('pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b', meta.detailAccent)} />
+            <div className="relative p-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    'flex h-8 w-8 flex-none items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-white transition-all duration-500',
+                    meta.ring,
+                    meta.bg,
+                  )}
+                >
+                  <Icon className={cn('h-4 w-4 transition-colors duration-500', displayStatus === 'in-progress' && 'animate-spin')} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-[10px] font-semibold tabular-nums text-slate-400">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="truncate text-sm font-semibold text-slate-800">{step.label}</span>
+                  </div>
+                </div>
+                <span
+                  className={cn(
+                    'inline-flex flex-none items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1',
+                    meta.detailBg,
+                    meta.detailRing,
+                    meta.textTone,
+                  )}
+                >
+                  {meta.label}
+                </span>
               </div>
               {step.detail && displayStatus === 'done-auto' && (
-                <div className={cn(
-                  'group/detail relative min-w-0 overflow-hidden rounded-lg px-3 py-1.5 text-sm font-medium leading-snug shadow-sm ring-1 transition-shadow duration-300 hover:shadow-md',
-                  meta.detailBg,
-                  meta.detailRing,
-                  meta.detailText,
-                )}>
-                  <span className={cn('pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b', meta.detailAccent)} />
-                  <span className="relative block pl-1.5">
-                    <Typewriter text={step.detail} />
-                  </span>
+                <div className={cn('mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed', meta.detailText)}>
+                  <Typewriter text={step.detail} />
                 </div>
               )}
             </div>
