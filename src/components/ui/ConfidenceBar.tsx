@@ -9,7 +9,7 @@ interface Props {
 export function ConfidenceBar({ value, className, showLabel = true }: Props) {
   const pct = Math.round(value * 100)
   const tone =
-    value >= 0.85 ? 'bg-red-500'
+    value >= 0.85 ? 'bg-emerald-500'
     : value >= 0.7  ? 'bg-brand-500'
     : value >= 0.5  ? 'bg-amber-500'
     : 'bg-red-500'

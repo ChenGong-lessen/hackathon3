@@ -7,6 +7,8 @@ import { GoldenPathScoreCard } from './GoldenPathScoreCard'
 
 interface Props {
   wo: WorkOrder
+  /** Optional side-effect (e.g. backend POST) fired alongside the local approval transition. */
+  onApprove?: () => void
 }
 
 /** Each agent gets this wall-clock window; its stream lines are evenly distributed inside. */
@@ -14,7 +16,7 @@ const AGENT_INTERVAL_MS = 5000
 /** Initial pause before the first agent kicks off, so the all-gray state is visible. */
 const ORCHESTRATION_INITIAL_DELAY_MS = 400
 
-export function WoDetailPage({ wo }: Props) {
+export function WoDetailPage({ wo, onApprove }: Props) {
   const [approved, setApproved] = useState(false)
   const [doneCount, setDoneCount] = useState(0)
   /** Index into the currently-running agent's `stream` array. null = no agent currently streaming. */
@@ -96,7 +98,7 @@ export function WoDetailPage({ wo }: Props) {
     return base.map((s) =>
       s.drivenBy && !completedAgents.has(s.drivenBy) ? { ...s, status: 'pending' as const } : s,
     )
-  }, [wo.goldenPath, wo.aiAnalysis.recommendedVendor, approved, completedAgents])
+  }, [wo.goldenPath, wo.aiAnalysis.recommendedVendor, approved])
 
   return (
     <div className="min-h-screen">
@@ -126,7 +128,10 @@ export function WoDetailPage({ wo }: Props) {
               wo={wo}
               approved={approved}
               orchestrationComplete={orchestrationComplete}
-              onApprove={() => setApproved(true)}
+              onApprove={() => {
+                setApproved(true)
+                onApprove?.()
+              }}
             />
           </div>
         </div>

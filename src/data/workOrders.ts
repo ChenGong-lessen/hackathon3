@@ -125,7 +125,7 @@ export const workOrders: WorkOrder[] = [
     goldenPath: [
       { id: 's1',  label: 'WO Created',         status: 'done-auto',   drivenBy: 'intake',     detail: 'NLP triage · HVAC / Boiler / P1',                       minutesSaved: 8   },
       { id: 's2',  label: 'Pending Dispatch',   status: 'done-auto',   drivenBy: 'scheduling', detail: 'ThermoCare on-call matched · 42 min ETA',               minutesSaved: 3   },
-      { id: 's3',  label: 'Vendor Quote',       status: 'skipped',     drivenBy: 'intake',     detail: 'Auto-priced $401 from 12 similar E04 calls',            minutesSaved: 60  },
+      { id: 's3',  label: 'Vendor Quote Draft', status: 'skipped',     drivenBy: 'intake',     detail: 'Auto-priced $401 from 12 similar E04 calls',            minutesSaved: 60  },
       { id: 's4',  label: 'Client Approval',    status: 'skipped',     drivenBy: 'intake',     detail: 'Under $500 auto-approve threshold',                     minutesSaved: 180 },
       { id: 's5',  label: 'Material Check',     status: 'done-auto',   drivenBy: 'rescode',    detail: 'ThermoCare van · electrode + sensor on board',          minutesSaved: 10  },
       { id: 's6',  label: 'Vendor Acceptance',  status: 'in-progress', drivenBy: 'scheduling', detail: 'Awaiting your confirmation' },
@@ -224,7 +224,7 @@ export const workOrders: WorkOrder[] = [
     goldenPath: [
       { id: 's1',  label: 'WO Created',         status: 'done-auto',   drivenBy: 'intake',     detail: 'NLP recognized recurring PM',                        minutesSaved: 4   },
       { id: 's2',  label: 'Pending Dispatch',   status: 'done-auto',   drivenBy: 'scheduling', detail: 'ClearAir on contract · already on site',             minutesSaved: 2   },
-      { id: 's3',  label: 'Vendor Quote',       status: 'skipped',     drivenBy: 'intake',     detail: 'Template price reused from Q1–Q3',                   minutesSaved: 60  },
+      { id: 's3',  label: 'Vendor Quote Draft', status: 'skipped',     drivenBy: 'intake',     detail: 'Template price reused from Q1–Q3',                   minutesSaved: 60  },
       { id: 's4',  label: 'Client Approval',    status: 'skipped',     drivenBy: 'intake',     detail: 'On-contract PM bundle · no approval needed',         minutesSaved: 180 },
       { id: 's5',  label: 'Material Check',     status: 'done-auto',   drivenBy: 'rescode',    detail: 'MERV-13 × 6 confirmed on van',                       minutesSaved: 10  },
       { id: 's6',  label: 'Vendor Acceptance',  status: 'done-auto',   drivenBy: 'scheduling', detail: 'Vendor on-site · acceptance auto',                   minutesSaved: 15  },

@@ -213,7 +213,7 @@ export function GoldenPathScoreCard({
             )}
           </div>
         </div>
-        <GoldenPathStepsRow steps={steps} />
+        <GoldenPathStepsRow steps={steps} scoringComplete={!orchestrating} />
       </div>
     </section>
   )
