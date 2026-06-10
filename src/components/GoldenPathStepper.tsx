@@ -167,13 +167,16 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
   return (
     <ol className="relative flex flex-col px-1 pt-2 pb-1">
       {steps.map((step, i) => {
-        // Status is driven entirely by the coffee API call lifecycle:
-        //   not yet called → 'pending', call in flight → 'in-progress', response received → 'done-auto'.
-        const displayStatus: PathStepStatus =
-          i < loadedCount ? 'done-auto' : i === loadedCount ? 'in-progress' : 'pending'
+        // Icon + label only render once loadedCount has reached this step.
+        // Anything further out stays hidden until its turn comes.
+        if (i > loadedCount) return null
+        // Status is driven entirely by the API call lifecycle:
+        //   call in flight → 'in-progress', response received → 'done-auto'.
+        const displayStatus: PathStepStatus = i < loadedCount ? 'done-auto' : 'in-progress'
         const meta = statusMeta[displayStatus]
         const Icon = meta.icon
-        const isLast = i === steps.length - 1
+        // The last *visible* step is either the currently-loading one or the final step.
+        const isLast = i === Math.min(loadedCount, steps.length - 1)
         return (
           <li key={step.id} className="relative flex min-w-0 items-stretch gap-3 text-left">
             <div className="relative flex flex-none flex-col items-center">
@@ -187,12 +190,7 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
                 <Icon className={cn('h-3 w-3 transition-colors duration-500', displayStatus === 'in-progress' && 'animate-spin')} />
               </div>
               {!isLast && (
-                <div
-                  className={cn(
-                    'w-px flex-1 transition-colors duration-500',
-                    displayStatus === 'pending' ? 'bg-slate-200' : 'bg-gradient-to-b from-brand-400 to-slate-200',
-                  )}
-                />
+                <div className="w-px flex-1 bg-gradient-to-b from-brand-400 to-slate-200 transition-colors duration-500" />
               )}
             </div>
             <div className={cn('flex min-w-0 flex-1 items-center gap-3 pt-1', !isLast && 'pb-4')}>
@@ -200,7 +198,7 @@ export function GoldenPathStepsRow({ steps, scoringComplete = true }: Props) {
                 <div className="text-sm font-semibold text-slate-800 leading-tight">{step.label}</div>
                 <div className={cn('mt-0.5 text-xs font-medium', meta.textTone)}>{meta.label}</div>
               </div>
-              {step.detail && displayStatus !== 'pending' && (
+              {step.detail && displayStatus === 'done-auto' && (
                 <div className={cn(
                   'group/detail relative min-w-0 overflow-hidden rounded-lg px-3 py-1.5 text-sm font-medium leading-snug shadow-sm ring-1 transition-shadow duration-300 hover:shadow-md',
                   meta.detailBg,
