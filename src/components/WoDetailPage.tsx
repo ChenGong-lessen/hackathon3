@@ -12,9 +12,9 @@ interface Props {
 }
 
 /** Each agent gets this wall-clock window; its stream lines are evenly distributed inside. */
-const AGENT_INTERVAL_MS = 5000
+const AGENT_INTERVAL_MS = 1200
 /** Initial pause before the first agent kicks off, so the all-gray state is visible. */
-const ORCHESTRATION_INITIAL_DELAY_MS = 400
+const ORCHESTRATION_INITIAL_DELAY_MS = 200
 
 export function WoDetailPage({ wo, onApprove }: Props) {
   const [approved, setApproved] = useState(false)
